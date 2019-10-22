@@ -52,6 +52,7 @@ module.exports = function (grunt) {
                     "src/main/atari/cartridge/formats/Cartridge64K_X07.js",
                     "src/main/atari/cartridge/formats/Cartridge8K_0840.js",
                     "src/main/atari/cartridge/formats/Cartridge8K_UA.js",
+                    "src/main/atari/cartridge/formats/CartridgePLS.js",
                     "src/main/atari/cartridge/CartridgeFormats.js",
                     "src/main/atari/cartridge/CartridgeCreator.js",
                     "src/main/images/Images.js",

@@ -2,6 +2,25 @@
 
 jt.CartridgeFormats = {
 
+    "PLS": {
+        name: "PLS",
+        desc: "PlusROM with online Backend",
+        priority: 100,
+        tryFormat: function(rom) {
+            // Any number of parts between 1 and 8
+            if (rom.content.length >= 8 && rom.content.length <= 4096 && 4096 % rom.content.length === 0){
+                if (jt.CartridgePLS.checkROM(rom))
+                     return this;
+            }
+        },
+        createCartridgeFromRom: function(rom) {
+            return new jt.CartridgePLS(rom, this);
+        },
+        recreateCartridgeFromSaveState: function(state, cart) {
+            return jt.CartridgePLS.recreateFromSaveState(state, cart);
+        }
+    },
+
     "4K": {
         name: "4K",
         desc: "4K Atari",
@@ -329,12 +348,12 @@ jt.CartridgeFormats = {
             return jt.Cartridge8K_64K_AR.recreateFromSaveState(state, cart);
         }
     }
-
 };
 
 
 // Formats available for user selection, in order
 jt.CartridgeFormatsUserOptions = [
+    "PLS",
     "4K",
     "CV",
     "E0",
