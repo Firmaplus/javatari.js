@@ -8,14 +8,14 @@ jt.CartridgePLS = function(rom, format) {
     function init(self) {
         self.rom = rom;
         self.format = format;
-        // Always use a 4K ROM image, multiplying the ROM internally
-        bytes = new Array(4096);
+        bytes = rom.content;        // uses the content of the ROM directly
         self.bytes = bytes;
-        var len = rom.content.length;
-
-        for (var pos = 0; pos < bytes.length; pos += len)
-            jt.Util.arrayCopy(rom.content, 0, bytes, pos, len);
-            
+        isPlus32 = bytes.length == 32768;
+        baseBankSwitchAddress = 0x0ff4;
+        topBankSwitchAddress = 0x0ffb;
+        
+        extraRAMSize = isPlus32 ? 128:null;
+        extraRAM = isPlus32 ? jt.Util.arrayFill(new Array(extraRAMSize), 0) : null;
             
         out_buffer_write_pointer = 0;
         out_buffer_send_pointer = 0;
@@ -48,8 +48,10 @@ jt.CartridgePLS = function(rom, format) {
             return receive_buffer[last_pos];
         }else if (maskedAddress == 0x0ff3){		// Receive buffer length should always be >= 0
             return receive_buffer_write_pointer - receive_buffer_read_pointer;
+        }else if (isPlus32 && (maskedAddress >= extraRAMSize) && (maskedAddress < extraRAMSize * 2)){
+            return extraRAM[maskedAddress - extraRAMSize];  // extra RAM
         }else{
-            return bytes[maskedAddress];	    // ROM
+            return bytes[bankAddressOffset + maskedAddress];	    // ROM
         }
     };
 
@@ -62,36 +64,47 @@ jt.CartridgePLS = function(rom, format) {
                 out_buffer_write_pointer = 0;
         }else if (maskedAddress == 0x0ff1 ){
 
-        var req = new XMLHttpRequest();
-        req.open("POST", url, true);
-        req.responseType = "arraybuffer";
-        req.timeout = DEFAULT_TIMEOUT;
-        req.onload = function () {
-            if (req.status === 200){
-              var raw_response = new Uint8Array(req.response);
-              
-              var length  = raw_response[0];
-
-              jt.Util.arrayCopy(raw_response, 1, receive_buffer, receive_buffer_write_pointer, length);
-              receive_buffer_write_pointer += length;
-
-            }else{
-              req.onerror();
+            var req = new XMLHttpRequest();
+            req.open("POST", url, true);
+            req.responseType = "arraybuffer";
+            req.timeout = DEFAULT_TIMEOUT;
+            req.onload = function () {
+                if (req.status === 200){
+                  var raw_response = new Uint8Array(req.response);
+                  var length  = raw_response[0];
+                  jt.Util.arrayCopy(raw_response, 1, receive_buffer, receive_buffer_write_pointer, length);
+                  receive_buffer_write_pointer += length;
+                }else{
+                  req.onerror();
+                }
+            };
+            req.onerror = req.ontimeout = function () {
+                console.log(" error 1 :" + req.status + " " + req.statusText);
+            };
+            // only send from byte 0 to out_buffer_write_pointer = 0 as binary !
+            var sendBinaryString = "";
+            for (var i = 0; i++; out_buffer_write_pointer >= i ){
+                sendBinaryString += String.fromCharCode(out_buffer[i])
             }
-        };
-        req.onerror = req.ontimeout = function () {
-            console.log(" error 1 :" + req.status + " " + req.statusText);
-        };
-        req.send(out_buffer);
+            req.send(sendBinaryString);
 
-        
+            out_buffer_write_pointer = 0;
         }
+        // Check for Extra RAM writes and then turn superChip mode on
+        else if (isPlus32 && maskedAddress < extraRAMSize ) {
+            extraRAM[maskedAddress] = val;
+        }
+
+
     };
 
     var maskAddress = function(address) {
-        return address & ADDRESS_MASK;
+        var maskedAddress = address & ADDRESS_MASK;
+        // Check and perform bank-switch as necessary
+        if (maskedAddress >= baseBankSwitchAddress && maskedAddress <= topBankSwitchAddress)
+            bankAddressOffset = BANK_SIZE * (maskedAddress - baseBankSwitchAddress);
+        return maskedAddress;
     };
-
 
     // Savestate  -------------------------------------------
 
@@ -100,6 +113,12 @@ jt.CartridgePLS = function(rom, format) {
             f: this.format.name,
             r: this.rom.saveState(),
             b:  jt.Util.compressInt8BitArrayToStringBase64(bytes),
+            bo: bankAddressOffset,
+            bb: baseBankSwitchAddress,
+            es: extraRAMSize,
+            tb: topBankSwitchAddress,
+            s: isPlus32,
+            e: extraRAM && jt.Util.compressInt8BitArrayToStringBase64(extraRAM),
             rb: jt.Util.compressInt8BitArrayToStringBase64(receive_buffer),
             ob: jt.Util.compressInt8BitArrayToStringBase64(out_buffer),
             h: host,
@@ -113,12 +132,25 @@ jt.CartridgePLS = function(rom, format) {
         this.rom = jt.ROM.loadState(state.r);
         bytes = jt.Util.uncompressStringBase64ToInt8BitArray(state.b, bytes);
         this.bytes = bytes;
+        bankAddressOffset = state.bo;
+        baseBankSwitchAddress = state.bb;
+        extraRAMSize = state.es;
+        topBankSwitchAddress =  state.tb;
+        isPlus32 = !!state.s;
+        extraRAM = state.e && jt.Util.uncompressStringBase64ToInt8BitArray(state.e, extraRAM);
         receive_buffer = jt.Util.uncompressStringBase64ToInt8BitArray(state.rb, receive_buffer);
         out_buffer = jt.Util.uncompressStringBase64ToInt8BitArray(state.ob, out_buffer);
     };
 
 
     var bytes;
+    var bankAddressOffset = 0;
+    var baseBankSwitchAddress;
+    var topBankSwitchAddress;
+    var isPlus32;
+    var extraRAMSize;
+    var extraRAM;
+   
     var out_buffer_write_pointer, out_buffer_send_pointer;
     var out_buffer = jt.Util.arrayFill(new Array(256), 0);
 
@@ -129,6 +161,7 @@ jt.CartridgePLS = function(rom, format) {
 
     var ADDRESS_MASK = 0x0fff;
     var DEFAULT_TIMEOUT = 15000;
+    var BANK_SIZE = 4096;
 
 
     if (rom) init(this);

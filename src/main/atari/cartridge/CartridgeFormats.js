@@ -8,7 +8,7 @@ jt.CartridgeFormats = {
         priority: 100,
         tryFormat: function(rom) {
             // Any number of parts between 1 and 8
-            if (rom.content.length >= 8 && rom.content.length <= 4096 && 4096 % rom.content.length === 0){
+            if ( rom.content.length === 4096 || rom.content.length === 32768 ){
                 if (jt.CartridgePLS.checkROM(rom))
                      return this;
             }
