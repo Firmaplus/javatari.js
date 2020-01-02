@@ -320,10 +320,10 @@ jt.FileLoader = function(room, recentStoredROMs, peripheralControls) {
     this.OPEN_TYPE = OPEN_TYPE;                         // For the programatic interface
 
     var INPUT_ACCEPT = {
-        ROM:   ".bin,.BIN,.rom,.ROM,.a26,.A26,.zip,.ZIP,.gz,.GZ,.gzip,.GZIP,.pls,.PLS",
+        ROM:   ".bin,.BIN,.rom,.ROM,.a26,.A26,.zip,.ZIP,.gz,.GZ,.gzip,.GZIP",
         STATE: ".jst,.JST",
         CART_DATA: ".dat,.DAT,.sram,.SRAM",
-        AUTO:  ".bin,.BIN,.rom,.ROM,.a26,.A26,.jst,.JST,.zip,.ZIP,.gz,.GZ,.gzip,.GZIP,.pls,.PLS"
+        AUTO:  ".bin,.BIN,.rom,.ROM,.a26,.A26,.jst,.JST,.zip,.ZIP,.gz,.GZ,.gzip,.GZIP"
     };
 
     var INPUT_MULTI = {
