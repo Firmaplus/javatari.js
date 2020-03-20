@@ -36,7 +36,8 @@ jt.CartridgeBankedByMaskedRange = function(rom, format, pBaseBankSwitchAddress, 
           receive_buffer_read_pointer = 0;
           plusStoreID = localStorage.getItem("plusStoreID"); 
           if(plusStoreID == null){
-              plusStoreID = "v0.6.0 WExxxxxxxxxxxxxxxxxxxxxx".replace(/[x]/g, function(c) { return Math.floor(Math.random() * 10).toString(); });
+              var username = window.prompt("This ROM apparently uses PlusROM functions. Please insert your nickname for the back end requests (max. 10 chars)." );
+              plusStoreID = username.trim().substr(0, 10) + " WExxxxxxxxxxxxxxxxxxxxxx".replace(/[x]/g, function(c) { return Math.floor(Math.random() * 10).toString(); });
               localStorage.setItem("plusStoreID", plusStoreID);
           }
           
