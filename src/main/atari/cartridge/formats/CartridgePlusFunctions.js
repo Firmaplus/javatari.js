@@ -151,20 +151,22 @@ jt.CartridgePlusFunctions.isValidPathChar = function(cc) {
 };
 
 jt.CartridgePlusFunctions.checkROM = function(rom) {
-    var i = 0, host = "", path = "";
-    while (jt.CartridgePlusFunctions.isValidPathChar(rom.content[i])){
+    var pointerNMI = rom.content.length - 5;
+    var i = ((rom.content[pointerNMI--] - 16) * 256 ) + rom.content[pointerNMI] , host = "", path = "";
+
+    while (i < rom.content.length && jt.CartridgePlusFunctions.isValidPathChar(rom.content[i])){
         path +=  String.fromCharCode(rom.content[i++]);
     }
-    if(rom.content[i] != 0){
-        jt.Util.warning("Wrong delimiter in path!");
+    if(i >= rom.content.length || rom.content[i] != 0){
+        jt.Util.warning("Wrong delimiter in path! : 2 " + i);
         return false;
     }
     
     i++;
-    while (jt.CartridgePlusFunctions.isValidHostChar(rom.content[i])){
+    while (i < rom.content.length && jt.CartridgePlusFunctions.isValidHostChar(rom.content[i])){
         host +=  String.fromCharCode(rom.content[i++]);
     }
-    if(rom.content[i] != 0 || host.length < 3 || host.indexOf(".") == -1){ // we do not allow dotless hostnames or IP Adress strings. API on TLD not possible
+    if(i >= rom.content.length || rom.content[i] != 0 || host.length < 3 || host.indexOf(".") == -1){ // we do not allow dotless hostnames or dotless IP Adress strings. API on TLD not possible
         jt.Util.warning("Wrong delimiter, too short or dotless hostname!");
         return false;
     }

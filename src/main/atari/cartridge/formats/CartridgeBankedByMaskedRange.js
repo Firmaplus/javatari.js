@@ -40,8 +40,8 @@ jt.CartridgeBankedByMaskedRange = function(rom, format, pBaseBankSwitchAddress, 
               plusStoreID = username.trim().substr(0, 10) + " WExxxxxxxxxxxxxxxxxxxxxx".replace(/[x]/g, function(c) { return Math.floor(Math.random() * 10).toString(); });
               localStorage.setItem("plusStoreID", plusStoreID);
           }
-          
-          var i=0;
+          var pointerNMI = bytes.length - 5;
+          var i = ((bytes[pointerNMI--] - 16) * 256 ) + bytes[pointerNMI];
           path = "";
           host = "";
           
@@ -208,7 +208,6 @@ jt.CartridgeBankedByMaskedRange = function(rom, format, pBaseBankSwitchAddress, 
     var receive_buffer = jt.Util.arrayFill(new Array(256), 0);
     var host, path, url;
     var DEFAULT_TIMEOUT = 15000;
-
 
     var ADDRESS_MASK = 0x0fff;
     var BANK_SIZE = 4096;

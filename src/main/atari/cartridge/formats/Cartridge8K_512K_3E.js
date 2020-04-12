@@ -25,7 +25,8 @@ jt.Cartridge8K_512K_3E = function(rom, format) {
               localStorage.setItem("plusStoreID", plusStoreID);
           }
           
-          var i=0;
+          var pointerNMI = bytes.length - 5;
+          var i = ((bytes[pointerNMI--] - 16) * 256 ) + bytes[pointerNMI];
           path = "";
           host = "";
           
@@ -165,7 +166,6 @@ jt.Cartridge8K_512K_3E = function(rom, format) {
             p: path,
             pid: plusStoreID,
             u: url
-
         };
     };
 
@@ -205,7 +205,6 @@ jt.Cartridge8K_512K_3E = function(rom, format) {
     var receive_buffer = jt.Util.arrayFill(new Array(256), 0);
     var host, path, url;
     var DEFAULT_TIMEOUT = 15000;
-
 
     var ADDRESS_MASK = 0x0fff;
     var BANK_SIZE = 2048;

@@ -28,7 +28,8 @@ jt.Cartridge4K = function(rom, format) {
               localStorage.setItem("plusStoreID", plusStoreID);
           }
           
-          var i=0;
+          var pointerNMI = bytes.length - 5;
+          var i = ((bytes[pointerNMI--] - 16) * 256 ) + bytes[pointerNMI];
           path = "";
           host = "";
           
